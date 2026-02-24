@@ -15,8 +15,12 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/admin", adminData.router);
 app.use(shopRouter);
 
+app.set("view engine", "pug");
+app.set("views", "views");
+
 app.use((req, res, next) => {
-  res.status(404).sendFile(path.join(__dirname, "views", "404.html"));
+  // res.status(404).sendFile(path.join(__dirname, "views", "404.html"));
+  res.render("404", { pageTitle: "page not found" });
 });
 
 // const server = http.createServer(app);

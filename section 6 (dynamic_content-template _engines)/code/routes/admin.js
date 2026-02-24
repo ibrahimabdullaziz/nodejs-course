@@ -7,7 +7,11 @@ const dirName = require("../util/path");
 const products = [];
 
 router.get("/add-product", (req, res, next) => {
-  res.sendFile(path.join(dirName, "views", "add-product.html"));
+  // res.sendFile(path.join(dirName, "views", "add-product.html"));
+  res.render("add-product", {
+    pageTitle: "add product",
+    path: "/admin/add-product",
+  });
 });
 
 router.post("/add-product", (req, res, next) => {
