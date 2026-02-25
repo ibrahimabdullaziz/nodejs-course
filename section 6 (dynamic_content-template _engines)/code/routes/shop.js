@@ -12,6 +12,9 @@ router.get("/", (req, res, next) => {
     products: adminData.products,
     pageTitle: "Shop",
     path: "/",
+    hasProducts: adminData.products.length > 0,
+    productCss: true,
+    shopActive: true,
   });
 });
 
