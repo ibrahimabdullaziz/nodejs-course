@@ -1,7 +1,7 @@
 {
-  "name": "products store",
+  "name": "nodejs-complete-guide",
   "version": "1.0.0",
-  "description": "",
+  "description": "Complete Node.js Guide",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -11,16 +11,15 @@
   "author": "Ibrahim Abdullaziz",
   "license": "ISC",
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.0"
   },
   "dependencies": {
-    "body-parser": "^2.2.2",
-    "dotenv": "^17.3.1",
-    "ejs": "^4.0.1",
-    "express": "^5.2.1",
-    "express-handlebars": "^8.0.6",
-    "mysql2": "^3.18.2",
-    "pug": "^3.0.3",
-    "sequelize": "^6.37.7"
+    "body-parser": "^1.20.2",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-handlebars": "^7.1.2",
+    "mysql2": "^3.9.7",
+    "pug": "^3.0.2",
+    "sequelize": "^6.37.3"
   }
 }
