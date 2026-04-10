@@ -1,13 +1,28 @@
-const Sequelize = require("sequelize");
 require("dotenv").config();
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
-  {
-    dialect: "mysql",
-    host: process.env.DB_HOST,
-  },
-);
 
-module.exports = sequelize;
+const mongodb = require("mongodb");
+const mongoClient = mongodb.MongoClient;
+
+let _db;
+
+const connectClient = (callback) => {
+  mongoClient
+    .connect(
+      `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.iqqljmr.mongodb.net/?appName=Cluster0`,
+    )
+    .then((client) => {
+      _db = client.db;
+      callback();
+    })
+    .catch((err) => console.log(err));
+};
+
+const getDb = () => {
+  if (_db) {
+    return _db;
+  }
+  throw error;
+};
+
+exports.connectClient = connectClient;
+exports.getDb = getDb;
