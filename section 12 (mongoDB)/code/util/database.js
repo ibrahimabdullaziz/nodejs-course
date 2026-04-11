@@ -11,7 +11,7 @@ const connectClient = (callback) => {
       `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.iqqljmr.mongodb.net/?appName=Cluster0`,
     )
     .then((client) => {
-      _db = client.db;
+      _db = client.db();
       callback();
     })
     .catch((err) => console.log(err));
