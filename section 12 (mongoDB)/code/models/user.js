@@ -118,6 +118,58 @@ class User {
         return null;
       });
   }
+
+  addOrder() {
+    const db = getDb();
+    const productIds = this.cart.items.map((i) => i.productId);
+
+    return db
+      .collection("products")
+      .find({ _id: { $in: productIds } })
+      .toArray()
+      .then((products) => {
+        const orderItems = this.cart.items.map((item) => {
+          const product = products.find((p) => p._id.toString() === item.productId.toString());
+          return {
+            product: product,
+            quantity: item.quantity,
+          };
+        });
+
+        return db
+          .collection("orders")
+          .insertOne({
+            userId: new mongodb.ObjectId(this._id),
+            items: orderItems,
+            date: new Date(),
+          })
+          .then((result) => {
+            this.cart = { items: [] };
+            return db
+              .collection("users")
+              .updateOne(
+                { _id: new mongodb.ObjectId(this._id) },
+                { $set: { cart: { items: [] } } }
+              );
+          });
+      })
+      .catch((err) => console.log(err));
+  }
+
+  static getOrders(userId) {
+    const db = getDb();
+    return db
+      .collection("orders")
+      .find({ userId: new mongodb.ObjectId(userId) })
+      .toArray()
+      .then((orders) => {
+        return orders;
+      })
+      .catch((err) => {
+        console.log(err);
+        return [];
+      });
+  }
 }
 
 module.exports = User;
