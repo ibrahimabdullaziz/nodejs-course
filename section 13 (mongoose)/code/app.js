@@ -2,6 +2,9 @@ const path = require("path");
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 const errorController = require("./controllers/error");
 
@@ -40,10 +43,21 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
+const MONGODB_URI =
+  process.env.MONGODB_URI ||
+  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/?appName=Cluster0`;
+
+if (
+  !process.env.MONGODB_URI &&
+  !(process.env.DB_USER && process.env.DB_PASSWORD && process.env.DB_HOST)
+) {
+  throw new Error(
+    "MongoDB connection details are not set. Define MONGODB_URI or DB_USER, DB_PASSWORD, DB_HOST in environment variables.",
+  );
+}
+
 mongoose
-  .connect(
-    "mongodb+srv://fantasy26124_db_user:uaQyBC5UdWVqBI4V@cluster0.iqqljmr.mongodb.net/?appName=Cluster0",
-  )
+  .connect(MONGODB_URI)
   .then((result) => {
     app.listen("3000");
     console.log("CONNECTED!");
