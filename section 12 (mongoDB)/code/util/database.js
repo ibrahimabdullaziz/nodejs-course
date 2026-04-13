@@ -6,16 +6,24 @@ const mongoClient = mongodb.MongoClient;
 let _db;
 
 const connectClient = (callback) => {
+  const uri =
+    process.env.MONGODB_URI ||
+    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_CLUSTER || process.env.DB_HOST}/?appName=Cluster0&retryWrites=true&w=majority`;
+
+  if (!uri || !process.env.DB_USER || !process.env.DB_PASSWORD) {
+    throw new Error(
+      "MongoDB connection details are not set. Define MONGODB_URI or DB_USER, DB_PASSWORD, and DB_CLUSTER/DB_HOST in the .env file.",
+    );
+  }
+
   mongoClient
-    .connect(
-      `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.iqqljmr.mongodb.net/?appName=Cluster0&retryWrites=true&w=majority`,
-      {
-        serverSelectionTimeoutMS: 30000,
-        tls: true
-      }
-    )
+    .connect(uri, {
+      serverSelectionTimeoutMS: 30000,
+      tls: true,
+    })
     .then((client) => {
-      _db = client.db();
+      const dbName = process.env.DB_NAME;
+      _db = dbName ? client.db(dbName) : client.db();
       callback();
     })
     .catch((err) => console.log(err));
