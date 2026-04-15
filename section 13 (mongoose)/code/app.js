@@ -21,22 +21,22 @@ const { default: mongoose } = require("mongoose");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
-// app.use((req, res, next) => {
-//   console.log("Finding user...");
-//   User.findById("69dc2915894ec0af28dd95f4")
-//     .then((user) => {
-//       if (!user) {
-//         return next();
-//       }
-//       console.log("User found:", user);
-//       req.user = new User(user.name, user.email, user.cart, user._id);
-//       next();
-//     })
-//     .catch((err) => {
-//       console.log("Error finding user:", err);
-//       next();
-//     });
-// });
+app.use((req, res, next) => {
+  console.log("Finding user...");
+  User.findById("69e016d943df14ca8b617074")
+    .then((user) => {
+      if (!user) {
+        return next();
+      }
+      console.log("User found:", user);
+      req.user = user;
+      next();
+    })
+    .catch((err) => {
+      console.log("Error finding user:", err);
+      next();
+    });
+});
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
@@ -65,11 +65,18 @@ if (
 console.log("Connecting to MongoDB URI:", MONGODB_URI);
 
 mongoose
-  .connect(MONGODB_URI, {
-    serverSelectionTimeoutMS: 30000,
-    family: 4,
-  })
-  .then((result) => {
+  .connect(MONGODB_URI)
+  .then(async (result) => {
+    const existingUser = await User.findOne();
+    if (!existingUser) {
+      const user = new User({
+        name: "ibrahim",
+        email: "ibrahim@test.com",
+        cart: { items: [] },
+      });
+      await user.save();
+    }
+
     app.listen("3000");
     console.log("CONNECTED!");
   })
