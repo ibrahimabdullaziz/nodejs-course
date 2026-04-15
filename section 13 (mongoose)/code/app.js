@@ -43,21 +43,32 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
+const dbName = process.env.DB_NAME ? `/${process.env.DB_NAME}` : "";
+const dbHost = process.env.DB_HOST || process.env.DB_CLUSTER;
+const dbPassword = process.env.DB_PASSWORD
+  ? encodeURIComponent(process.env.DB_PASSWORD)
+  : "";
+
 const MONGODB_URI =
   process.env.MONGODB_URI ||
-  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/?appName=Cluster0`;
+  `mongodb+srv://${process.env.DB_USER}:${dbPassword}@${dbHost}${dbName}?retryWrites=true&w=majority`;
 
 if (
   !process.env.MONGODB_URI &&
-  !(process.env.DB_USER && process.env.DB_PASSWORD && process.env.DB_HOST)
+  !(process.env.DB_USER && process.env.DB_PASSWORD && dbHost)
 ) {
   throw new Error(
-    "MongoDB connection details are not set. Define MONGODB_URI or DB_USER, DB_PASSWORD, DB_HOST in environment variables.",
+    "MongoDB connection details are not set. Define MONGODB_URI or DB_USER, DB_PASSWORD, and DB_CLUSTER/DB_HOST in environment variables.",
   );
 }
 
+console.log("Connecting to MongoDB URI:", MONGODB_URI);
+
 mongoose
-  .connect(MONGODB_URI)
+  .connect(MONGODB_URI, {
+    serverSelectionTimeoutMS: 30000,
+    family: 4,
+  })
   .then((result) => {
     app.listen("3000");
     console.log("CONNECTED!");
