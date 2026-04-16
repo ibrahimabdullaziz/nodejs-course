@@ -21,6 +21,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use((req, res, next) => {
+  const cookie = req.get("cookie") || "";
+  const isLoggedInCookie = cookie.split(";")[7]?.split("=")[1];
+  req.isLoggedIn = isLoggedInCookie === "true";
+
   User.findOne()
     .then((user) => {
       req.user = user;
