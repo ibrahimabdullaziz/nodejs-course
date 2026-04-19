@@ -2,18 +2,32 @@ const User = require("../models/user");
 const crypt = require("bcryptjs");
 
 exports.getLogin = (req, res, next) => {
+  let message = req.flash("login-error");
+  if (message.length > 0) {
+    message = message[0];
+  } else {
+    message = null;
+  }
   res.render("auth/login", {
     path: "/login",
     pageTitle: "Login",
     isAuthenticated: false,
+    errorMessage: message,
   });
 };
 
 exports.getSignup = (req, res, next) => {
+  let message = req.flash("signup-error");
+  if (message.length > 0) {
+    message = message[0];
+  } else {
+    message = null;
+  }
   res.render("auth/signup", {
     path: "/signup",
     pageTitle: "Signup",
     isAuthenticated: false,
+    errorMessage: message,
   });
 };
 
@@ -23,6 +37,7 @@ exports.postLogin = (req, res, next) => {
   User.findOne({ email: email })
     .then((user) => {
       if (!user) {
+        req.flash("login-error", "Sorry, Can not find this email!");
         return res.redirect("/login");
       }
       return crypt.compare(password, user.password).then((doMatch) => {
@@ -30,10 +45,11 @@ exports.postLogin = (req, res, next) => {
           req.session.isLoggedIn = true;
           req.session.user = user;
           req.session.save((err) => {
-            console.log(err);
+            console.log("LOGIN SUCCESSFUL");
             res.redirect("/");
           });
         } else {
+          req.flash("login-error", "Passwords should match!");
           res.redirect("/login");
         }
       });
@@ -45,11 +61,12 @@ exports.postLogin = (req, res, next) => {
 };
 
 exports.postSignup = (req, res, next) => {
-  const { email, password, confirmedPassword } = req.body;
+  const { email, password, confirmPassword } = req.body;
 
   User.findOne({ email: email })
     .then((userDoc) => {
       if (userDoc) {
+        req.flash("signup-error", "this email alreday exists!");
         return res.redirect("/signup");
       }
       return crypt

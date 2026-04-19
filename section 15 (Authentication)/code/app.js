@@ -8,6 +8,7 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const csrf = require("csurf");
+const flash = require("connect-flash");
 
 const errorController = require("./controllers/error");
 const User = require("./models/user");
@@ -19,6 +20,10 @@ const app = express();
 const store = new MongoDBStore({
   uri: MONGODB_URI,
   collection: "sessions",
+});
+
+store.on("error", function (error) {
+  console.log(error);
 });
 
 app.set("view engine", "ejs");
@@ -48,12 +53,20 @@ app.use((req, res, next) => {
   }
   User.findById(req.session.user._id)
     .then((user) => {
+      if (!user) {
+        return next();
+      }
       req.user = user;
       next();
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      throw new Error(err);
+    });
 });
+
 app.use(csrfProtection);
+
+app.use(flash());
 
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn;
@@ -76,9 +89,6 @@ if (!MONGODB_URI) {
 mongoose
   .connect(MONGODB_URI)
   .then((result) => {
-    return User.findOne();
-  })
-  .then(() => {
     app.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`);
     });
