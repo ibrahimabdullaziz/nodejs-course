@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const crypt = require("bcryptjs");
+const email = require("../util/email");
 
 exports.getLogin = (req, res, next) => {
   let message = req.flash("login-error");
@@ -61,7 +62,7 @@ exports.postLogin = (req, res, next) => {
 };
 
 exports.postSignup = (req, res, next) => {
-  const { email, password, confirmPassword } = req.body;
+  const { email: userEmail, password, confirmPassword } = req.body;
 
   User.findOne({ email: email })
     .then((userDoc) => {
@@ -73,7 +74,7 @@ exports.postSignup = (req, res, next) => {
         .hash(password, 12)
         .then((cryptedPassword) => {
           const user = new User({
-            email: email,
+            email: userEmail,
             password: cryptedPassword,
             cart: { items: [] },
           });
@@ -82,6 +83,9 @@ exports.postSignup = (req, res, next) => {
         })
         .then((result) => {
           console.log("USER CREATED!");
+          return email.sendWelcomeEmail(userEmail, "Customer");
+        })
+        .then(() => {
           res.redirect("/login");
         });
     })
