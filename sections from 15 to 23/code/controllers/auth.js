@@ -4,6 +4,7 @@ const crypto = require("crypto");
 
 const { sendEmail } = require("../util/email");
 const user = require("../models/user");
+const { validationResult } = require("express-validator");
 
 exports.getLogin = (req, res, next) => {
   let message = req.flash("login-error");
@@ -66,41 +67,41 @@ exports.postLogin = (req, res, next) => {
 
 exports.postSignup = (req, res, next) => {
   const { email, password, confirmPassword } = req.body;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log(errors);
+    return res.status(422).render("auth/signup", {
+      path: "/signup",
+      pageTitle: "signup",
+      isAuthenticated: false,
+      errorMessage: errors.array()[0].msg,
+    });
+  }
 
-  User.findOne({ email: email })
-    .then((userDoc) => {
-      if (userDoc) {
-        req.flash("signup-error", "this email alreday exists!");
-        return res.redirect("/signup");
-      }
-      return crypt
-        .hash(password, 12)
-        .then((cryptedPassword) => {
-          const user = new User({
-            email: email,
-            password: cryptedPassword,
-            cart: { items: [] },
-          });
+  return crypt
+    .hash(password, 12)
+    .then((cryptedPassword) => {
+      const user = new User({
+        email: email,
+        password: cryptedPassword,
+        cart: { items: [] },
+      });
 
-          return user.save();
-        })
-        .then((result) => {
-          const html = `
+      return user.save();
+    })
+    .then((result) => {
+      const html = `
             <h1>Hi, welcome to our shop!</h1>
       <p>Thank you for signing up. We're glad to have you!</p>
       <p>Start exploring our products and enjoy your shopping experience.</p>
       <br/>
       <p>Best regards,<br/>The Shop Team</p>
           `;
-          sendEmail(email, html).catch((err) =>
-            console.log("Email failed to send:", err.message),
-          );
-          console.log("USER CREATED!");
-          res.redirect("/login");
-        });
-    })
-    .catch((err) => {
-      console.log(err);
+      sendEmail(email, html).catch((err) =>
+        console.log("Email failed to send:", err.message),
+      );
+      console.log("USER CREATED!");
+      res.redirect("/login");
     });
 };
 
