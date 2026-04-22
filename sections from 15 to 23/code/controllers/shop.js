@@ -12,7 +12,7 @@ exports.getProducts = (req, res, next) => {
       });
     })
     .catch((err) => {
-      console.log(err);
+      errorMessage500();
     });
 };
 
@@ -26,7 +26,7 @@ exports.getProduct = (req, res, next) => {
         path: "/products",
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => errorMessage500());
 };
 
 exports.getIndex = (req, res, next) => {
@@ -39,7 +39,7 @@ exports.getIndex = (req, res, next) => {
       });
     })
     .catch((err) => {
-      console.log(err);
+      errorMessage500();
     });
 };
 
@@ -57,7 +57,7 @@ exports.getCart = (req, res, next) => {
         products: products,
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => errorMessage500());
 };
 
 exports.postCart = (req, res, next) => {
@@ -79,7 +79,7 @@ exports.postCartDeleteProduct = (req, res, next) => {
     .then((result) => {
       res.redirect("/cart");
     })
-    .catch((err) => console.log(err));
+    .catch((err) => errorMessage500());
 };
 
 exports.postOrder = (req, res, next) => {
@@ -107,7 +107,7 @@ exports.postOrder = (req, res, next) => {
     .then(() => {
       res.redirect("/orders");
     })
-    .catch((err) => console.log(err));
+    .catch((err) => errorMessage500());
 };
 
 exports.getOrders = (req, res, next) => {
@@ -119,5 +119,5 @@ exports.getOrders = (req, res, next) => {
         orders: orders,
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => errorMessage500());
 };

@@ -87,7 +87,7 @@ exports.postLogin = (req, res, next) => {
       });
     })
     .catch((err) => {
-      console.log("ERROR!.....", err);
+      console.log("ERROR", err);
       return res.redirect("/login");
     });
 };
@@ -224,7 +224,7 @@ exports.getNewPassword = (req, res, next) => {
         token: token,
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => errorMessage500());
 };
 
 exports.postNewPassword = (req, res, next) => {
@@ -258,5 +258,5 @@ exports.postNewPassword = (req, res, next) => {
         res.redirect("/login");
       }
     })
-    .catch((err) => console.log(err));
+    .catch((err) => errorMessage500());
 };

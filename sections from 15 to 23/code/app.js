@@ -4,8 +4,8 @@ require("dotenv").config();
 
 const express = require("express");
 const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
 const session = require("express-session");
+const mongoose = require("mongoose");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const csrf = require("csurf");
 const flash = require("connect-flash");
@@ -47,6 +47,7 @@ app.use(
   }),
 );
 
+//check user and sessions
 app.use((req, res, next) => {
   if (!req.session.user) {
     return next();
@@ -60,7 +61,7 @@ app.use((req, res, next) => {
       next();
     })
     .catch((err) => {
-      throw new Error(err);
+      next(new Error(err));
     });
 });
 
@@ -78,7 +79,17 @@ app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 
+app.get("/500", errorController.get500);
+
 app.use(errorController.get404);
+
+app.use((error, req, res, next) => {
+  res.status(500).render("500", {
+    pageTitle: "Error!",
+    path: "/500",
+    isAuthenticated: req.session.isLoggedIn,
+  });
+});
 
 const PORT = process.env.PORT || 3000;
 
