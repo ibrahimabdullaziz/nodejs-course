@@ -23,9 +23,7 @@ router.post(
       .isString()
       .isLength({ min: 1 })
       .withMessage("text should be string "),
-    check("imageUrl")
-      .isURL()
-      .withMessage("image should be in URL correct formatting "),
+
     check("price").isNumeric().withMessage("price should be numeric"),
     check("description")
       .isString()
@@ -45,9 +43,7 @@ router.post(
       .isString()
       .isLength({ min: 1 })
       .withMessage("text should be string "),
-    check("imageUrl")
-      .isURL()
-      .withMessage("image should be in URL correct formatting "),
+
     check("price").isNumeric().withMessage("price should be numeric"),
     check("description")
       .isString()
