@@ -1,5 +1,9 @@
 const Product = require("../models/product");
 const Order = require("../models/order");
+const errorHandler = require("../util/500");
+
+const fs = require("fs");
+const path = require("path");
 
 exports.getProducts = (req, res, next) => {
   Product.find()
@@ -120,4 +124,24 @@ exports.getOrders = (req, res, next) => {
       });
     })
     .catch((err) => errorMessage500());
+};
+
+exports.getInvoice = (req, res, next) => {
+  const orderId = req.params.orderId;
+  const invoiceName = "invoice-" + orderId + ".pdf";
+  const invoicePath = path.join("data", "invoice", invoiceName);
+
+  fs.readFile(invoicePath, (err, data) => {
+    if (err) {
+      return errorHandler(err, next);
+    }
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      'inline; filename="' + invoiceName + '"',
+    );
+
+    res.send(data);
+  });
 };

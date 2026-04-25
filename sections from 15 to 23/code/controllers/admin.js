@@ -62,7 +62,7 @@ exports.postAddProduct = (req, res, next) => {
     });
   }
 
-  const imageUrl = image.path;
+  const imageUrl = image.path.replace("\\", "/");
 
   const product = new Product({
     title: title,
@@ -119,6 +119,21 @@ exports.postEditProduct = (req, res, next) => {
   const image = req.file;
   const updatedDesc = req.body.description;
 
+  if (!image) {
+    return res.status(422).render("admin/edit-product", {
+      path: "/admin/edit-product",
+      pageTitle: "Add Product",
+      editing: false,
+      errorMessage: "Attached file is not an image.",
+      oldInputs: {
+        title: title,
+        price: price,
+        description: description,
+      },
+      validationErrors: [],
+    });
+  }
+
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -146,7 +161,7 @@ exports.postEditProduct = (req, res, next) => {
       product.price = updatedPrice;
       product.description = updatedDesc;
       if (image) {
-        product.imageUrl = image.path;
+        product.imageUrl = image.path.replace("\\", "/");
       }
       return product.save().then((result) => {
         console.log("UPDATED PRODUCT!");
