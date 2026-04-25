@@ -4,6 +4,7 @@ const errorHandler = require("../util/500");
 
 const fs = require("fs");
 const path = require("path");
+const pdfDocument = require("pdfkit");
 
 exports.getProducts = (req, res, next) => {
   Product.find()
@@ -16,7 +17,7 @@ exports.getProducts = (req, res, next) => {
       });
     })
     .catch((err) => {
-      errorMessage500();
+      errorHandler(err, next);
     });
 };
 
@@ -30,7 +31,7 @@ exports.getProduct = (req, res, next) => {
         path: "/products",
       });
     })
-    .catch((err) => errorMessage500());
+    .catch((err) => errorHandler(err, next));
 };
 
 exports.getIndex = (req, res, next) => {
@@ -43,7 +44,7 @@ exports.getIndex = (req, res, next) => {
       });
     })
     .catch((err) => {
-      errorMessage500();
+      errorHandler(err, next);
     });
 };
 
@@ -61,7 +62,7 @@ exports.getCart = (req, res, next) => {
         products: products,
       });
     })
-    .catch((err) => errorMessage500());
+    .catch((err) => errorHandler(err, next));
 };
 
 exports.postCart = (req, res, next) => {
@@ -83,7 +84,7 @@ exports.postCartDeleteProduct = (req, res, next) => {
     .then((result) => {
       res.redirect("/cart");
     })
-    .catch((err) => errorMessage500());
+    .catch((err) => errorHandler(err, next));
 };
 
 exports.postOrder = (req, res, next) => {
@@ -111,7 +112,7 @@ exports.postOrder = (req, res, next) => {
     .then(() => {
       res.redirect("/orders");
     })
-    .catch((err) => errorMessage500());
+    .catch((err) => errorHandler(err, next));
 };
 
 exports.getOrders = (req, res, next) => {
@@ -123,7 +124,7 @@ exports.getOrders = (req, res, next) => {
         orders: orders,
       });
     })
-    .catch((err) => errorMessage500());
+    .catch((err) => errorHandler(err, next));
 };
 
 exports.getInvoice = (req, res, next) => {
@@ -131,17 +132,60 @@ exports.getInvoice = (req, res, next) => {
   const invoiceName = "invoice-" + orderId + ".pdf";
   const invoicePath = path.join("data", "invoice", invoiceName);
 
-  fs.readFile(invoicePath, (err, data) => {
-    if (err) {
+  Order.findById(orderId)
+    .then((order) => {
+      if (!order) {
+        return errorHandler(new Error("order not found"), next);
+      }
+
+      if (order.user.userId.toString() !== req.user._id.toString()) {
+        return errorHandler(new Error("invalid user access"), next);
+      }
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        'inline; filename="' + invoiceName + '"',
+      );
+
+      const pdfDoc = new pdfDocument();
+
+      pdfDoc.pipe(fs.createWriteStream(invoicePath));
+      pdfDoc.pipe(res);
+
+      //write pdf content
+      pdfDoc.fontSize(26).text("invoice", { underline: true });
+
+      pdfDoc.text("________________________");
+      let totalPrice = 0;
+      order.products.forEach((prod) => {
+        totalPrice += prod.product.price * prod.quantity;
+        pdfDoc
+          .fontSize(16)
+          .text(
+            `${prod.product.title} -> ${prod.product.price} X ${prod.quantity} `,
+          );
+      });
+      pdfDoc.text("________________________");
+      pdfDoc.fontSize(22).text("Total price: " + totalPrice);
+
+      pdfDoc.end();
+
+      // fs.readFile(invoicePath, (err, data) => {
+      //   if (err) {
+      //     return errorHandler(err, next);
+      //   }
+
+      //   res.setHeader("Content-Type", "application/pdf");
+      //   res.setHeader(
+      //     "Content-Disposition",
+      //     'inline; filename="' + invoiceName + '"',
+      //   );
+
+      //   res.send(data);
+      // });
+    })
+    .catch((err) => {
       return errorHandler(err, next);
-    }
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      'inline; filename="' + invoiceName + '"',
-    );
-
-    res.send(data);
-  });
+    });
 };
