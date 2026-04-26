@@ -3,6 +3,7 @@ const Product = require("../models/product");
 const { validationResult } = require("express-validator");
 const errorHandler = require("../util/500");
 const fileHelper = require("../util/file");
+const { json } = require("body-parser");
 
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
@@ -177,8 +178,8 @@ exports.getProducts = (req, res, next) => {
     });
 };
 
-exports.postDeleteProduct = (req, res, next) => {
-  const prodId = req.body.productId;
+exports.deleteProduct = (req, res, next) => {
+  const prodId = req.params.productId;
   Product.findById(prodId)
     .then((product) => {
       if (!product) {
@@ -189,9 +190,9 @@ exports.postDeleteProduct = (req, res, next) => {
     })
     .then(() => {
       console.log("DESTROYED PRODUCT");
-      res.redirect("/admin/products");
+      res.status(200).json({ message: "SUCCESS" });
     })
     .catch((err) => {
-      return errorHandler(err, next);
+      res.status(500).json({ message: "FAILED ON DELETION!" });
     });
 };
