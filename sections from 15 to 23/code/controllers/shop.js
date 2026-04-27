@@ -5,6 +5,7 @@ const errorHandler = require("../util/500");
 const fs = require("fs");
 const path = require("path");
 const pdfDocument = require("pdfkit");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const ITEMS_PER_PAGE = 2;
 
@@ -124,10 +125,83 @@ exports.postCartDeleteProduct = (req, res, next) => {
     .catch((err) => errorHandler(err, next));
 };
 
+exports.getCheckout = (req, res, next) => {
+  let products;
+  let totalSum = 0;
+  if (!req.user) {
+    return res.redirect("/login");
+  }
+  req.user
+    .populate("cart.items.productId")
+    .then((user) => {
+      products = user.cart.items;
+      products.forEach((p) => {
+        totalSum += p.quantity * p.productId.price;
+      });
+
+      return stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        mode: "payment",
+        line_items: products.map((p) => {
+          return {
+            price_data: {
+              currency: "usd",
+              unit_amount: Math.round(p.productId.price * 100),
+              product_data: {
+                name: p.productId.title,
+                description: p.productId.description,
+              },
+            },
+            quantity: p.quantity,
+          };
+        }),
+        success_url:
+          req.protocol + "://" + req.get("host") + "/checkout/success",
+        cancel_url: req.protocol + "://" + req.get("host") + "/checkout/cancel",
+      })
+        .then((session) => {
+          res.render("shop/checkout", {
+            path: "/checkout",
+            pageTitle: "checkout",
+            products: products,
+            totalProducts: totalSum,
+            sessionId: session.id,
+            publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
+          });
+        });
+    })
+    .catch((err) => errorHandler(err, next));
+};
+
 exports.postOrder = (req, res, next) => {
   if (!req.user) {
     return res.redirect("/login");
   }
+  req.user
+    .populate("cart.items.productId")
+    .then((user) => {
+      const products = user.cart.items.map((i) => {
+        return { quantity: i.quantity, product: { ...i.productId._doc } };
+      });
+      const order = new Order({
+        user: {
+          email: req.user.email,
+          userId: req.user,
+        },
+        products: products,
+      });
+      return order.save();
+    })
+    .then((result) => {
+      return req.user.clearCart();
+    })
+    .then(() => {
+      res.redirect("/orders");
+    })
+    .catch((err) => errorHandler(err, next));
+};
+
+exports.getCheckoutSuccess = (req, res, next) => {
   req.user
     .populate("cart.items.productId")
     .then((user) => {
